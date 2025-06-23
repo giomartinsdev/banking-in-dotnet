@@ -8,7 +8,6 @@ using MongoDB.Bson.Serialization.Serializers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure MongoDB Guid serialization
 BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
 
 builder.AddServiceDefaults();

@@ -5,17 +5,26 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.API", "src\BankingProject.API\BankingProject.API.csproj", "{321FF3BD-428B-48E3-A162-D6D19995E076}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.API", "src/BankingProject.API/BankingProject.API.csproj", "{321FF3BD-428B-48E3-A162-D6D19995E076}"
+	ProjectSection(ProjectDependencies) = postProject
+		{17249F74-B5A2-4D8F-987E-C378E2EED786} = {17249F74-B5A2-4D8F-987E-C378E2EED786}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.AppHost", "src\BankingProject.AppHost\BankingProject.AppHost.csproj", "{6DEDAA7D-9835-4EBF-BC07-33D59B747D8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.AppHost", "src/BankingProject.AppHost/BankingProject.AppHost.csproj", "{6DEDAA7D-9835-4EBF-BC07-33D59B747D8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.ServiceDefaults", "src\BankingProject.ServiceDefaults\BankingProject.ServiceDefaults.csproj", "{A8736DFD-5D81-4491-B58D-47BFCFF30E76}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.ServiceDefaults", "src/BankingProject.ServiceDefaults/BankingProject.ServiceDefaults.csproj", "{A8736DFD-5D81-4491-B58D-47BFCFF30E76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.Domain", "src\BankingProject.Domain\BankingProject.Domain.csproj", "{EAD5EAF4-40AA-4D94-88A8-E19D3A9FE195}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.Domain", "src/BankingProject.Domain/BankingProject.Domain.csproj", "{EAD5EAF4-40AA-4D94-88A8-E19D3A9FE195}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.Application", "BankingProject.Application\BankingProject.Application.csproj", "{17249F74-B5A2-4D8F-987E-C378E2EED786}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.Application", "src/BankingProject.Application/BankingProject.Application.csproj", "{17249F74-B5A2-4D8F-987E-C378E2EED786}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EAD5EAF4-40AA-4D94-88A8-E19D3A9FE195} = {EAD5EAF4-40AA-4D94-88A8-E19D3A9FE195}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.Infrastructure", "BankingProject.Infrastructure\BankingProject.Infrastructure.csproj", "{A707D74F-4428-4DA9-9BBC-E4E5F644D3D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankingProject.Infrastructure", "src/BankingProject.Infrastructure/BankingProject.Infrastructure.csproj", "{A707D74F-4428-4DA9-9BBC-E4E5F644D3D0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EAD5EAF4-40AA-4D94-88A8-E19D3A9FE195} = {EAD5EAF4-40AA-4D94-88A8-E19D3A9FE195}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
