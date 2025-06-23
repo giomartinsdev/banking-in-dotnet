@@ -1,7 +1,21 @@
+using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("mongousername", publishValueAsDefault: true, value: "admin");
-IResourceBuilder<ParameterResource> databasePassword = builder.AddParameter("mongopassword", publishValueAsDefault: true, value: "admin");
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+var connectionString = config.GetConnectionString("MongoDb") ?? "mongodb://admin:admin@localhost:27017";
+var mongoUrlBuilder = new MongoUrlBuilder(connectionString);
+string username = mongoUrlBuilder.Username ?? "admin";
+string password = mongoUrlBuilder.Password ?? "admin";
+
+IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("mongousername", publishValueAsDefault: true, value: username);
+IResourceBuilder<ParameterResource> databasePassword = builder.AddParameter("mongopassword", publishValueAsDefault: true, value: password);
 
 var kafkaServer = builder
     .AddKafka("banking-kafka-server", 9092)

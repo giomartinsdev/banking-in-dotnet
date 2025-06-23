@@ -7,10 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\BankingProject.Domain\BankingProject.Domain.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
+      <ProjectReference Include="..\BankingProject.Domain\BankingProject.Domain.csproj" />
       <PackageReference Include="Aspire.Hosting.MongoDB" Version="9.3.1" />
     </ItemGroup>
 
