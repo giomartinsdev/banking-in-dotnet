@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\BankingProject.Domain\BankingProject.Domain.csproj" />
+        <ProjectReference Include="..\BankingProject.Domain\BankingProject.Domain.csproj" />
     </ItemGroup>
 
 </Project>
