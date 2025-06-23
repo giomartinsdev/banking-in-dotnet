@@ -1,6 +1,8 @@
-﻿namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
+﻿using BankingProject.Domain.Abstractions;
 
-public class OpenPersonalInformation
+namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
+
+public class OpenPersonalInformation : IValueObject
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }

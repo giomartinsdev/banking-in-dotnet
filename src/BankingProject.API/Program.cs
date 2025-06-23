@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using BankingProject.Application.Services;
 using BankingProject.Domain.Context.CustomerAggregate.Repositories;
-using Microsoft.Extensions.Hosting.DataPersistence.Banking;
+using BankingProject.Infrastructure;
+using BankingProject.Infrastructure.DataPersistence.Banking;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -35,6 +37,9 @@ builder.Services.AddSwaggerGen
 
 builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<BalanceOperationService>();
+builder.Services.AddSingleton<ActivitySource>(sp => 
+    new ActivitySource("BankingProject.API", "1.0.0"));
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
@@ -48,11 +53,6 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
     var databaseName = builder.Configuration["MongoDb:DatabaseName"];
     return client.GetDatabase(databaseName);
 });
-
-builder.Services.AddScoped<CustomerService>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-
-
 
 var app = builder.Build();
 

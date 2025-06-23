@@ -11,8 +11,4 @@
       <PackageReference Include="MongoDB.Bson" Version="3.4.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\BankingProject.ServiceDefaults\BankingProject.ServiceDefaults.csproj" />
-    </ItemGroup>
-
 </Project>

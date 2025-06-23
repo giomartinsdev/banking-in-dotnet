@@ -1,8 +1,10 @@
-﻿namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
+﻿using BankingProject.Domain.Abstractions;
+
+namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 using System.Security.Cryptography;
 using System.Text;
 
-public class Password
+public class Password : IValueObject
 {
     public string Salt { get; set; }
     public string Hash { get; set; }

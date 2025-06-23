@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BankingProject.ServiceDefaults\BankingProject.ServiceDefaults.csproj" />
         <ProjectReference Include="..\BankingProject.Application\BankingProject.Application.csproj" />
         <ProjectReference Include="..\BankingProject.Domain\BankingProject.Domain.csproj" />
         <ProjectReference Include="..\BankingProject.Infrastructure\BankingProject.Infrastructure.csproj" />

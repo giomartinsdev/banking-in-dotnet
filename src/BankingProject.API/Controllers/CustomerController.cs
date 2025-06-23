@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using BankingProject.Application.Services;
-using BankingProject.Domain.Context.CustomerAggregate;
-using BankingProject.Domain.Context.CustomerAggregate.Entites;
 
 namespace BankingProject.ApiService.Controllers;
 

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
-using BankingProject.Domain.Context.CustomerAggregate.Entites;
 using BankingProject.Domain.Context.CustomerAggregate.Repositories;
+using BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 
 namespace BankingProject.Application.Services;
 
@@ -100,7 +100,7 @@ public class CustomerService
             }
         }
 
-        customer.UpdatedAt = DateTime.UtcNow;
+        customer.ValidInformation.Update();
         await _customerRepository.UpdateAsync(customer);
         return customer;
     }

@@ -1,13 +1,9 @@
-﻿using System.Reflection.Metadata;
-using BankingProject.Domain.Context.CustomerAggregate;
-using BankingProject.Domain.Context.CustomerAggregate.Entites;
-using BankingProject.Domain.Context.CustomerAggregate.Repositories;
-using BankingProject.Infrastructure;
-using BankingProject.Infrastructure.Instrumentation.Metrics;
+﻿using BankingProject.Domain.Context.CustomerAggregate.Repositories;
+using BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 using BankingProject.Infrastructure.MongoDB;
 using MongoDB.Driver;
 
-namespace Microsoft.Extensions.Hosting.DataPersistence.Banking;
+namespace BankingProject.Infrastructure.DataPersistence.Banking;
 
 public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerRepository
 {
@@ -38,11 +34,55 @@ public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerR
 
     public Task DeleteAsync(Customer entity)
     {
-        return DocumentCollection.DeleteOneAsync(x => x.Id == entity.Id);
+        entity.ValidInformation.UpdateValidity(false);
+        return DocumentCollection.ReplaceOneAsync(x => x.Id == entity.Id, entity);
     }
    
     public Task UpdateAsync(Customer entity)
     {
+        entity.ValidInformation.Update();
         return DocumentCollection.ReplaceOneAsync(x => x.Id == entity.Id, entity);
     }
+    
+    public async Task<IEnumerable<BalanceOperation>> GetBalanceOperationsAsync(Guid customerId)
+    {
+        return await DocumentCollection
+            .Find(x => x.Id == customerId)
+            .Project(c => c.BalanceOperations)
+            .FirstOrDefaultAsync()!;
+    }
+    
+    public async Task<BalanceOperation?> GetBalanceOperationByIdAsync(Guid id)
+    {
+        var filter = Builders<Customer>.Filter.ElemMatch(c => c.BalanceOperations, bo => bo.Id == id);
+        return await DocumentCollection
+            .Find(filter)
+            .Project(c => c.BalanceOperations.FirstOrDefault())
+            .FirstOrDefaultAsync();
+    }
+    
+    public async Task InsertBalanceOperationAsync(Guid customerId, BalanceOperation entity)
+    {
+        var filter = Builders<Customer>.Filter.Eq(x => x.Id, customerId);
+        var update = Builders<Customer>.Update.Push(c => c.BalanceOperations, entity);
+        await DocumentCollection.UpdateOneAsync(filter, update);
+    }
+    
+    public async Task DeleteBalanceOperationAsync(Guid id)
+    {
+        var customerFilter = Builders<Customer>.Filter.ElemMatch(c => c.BalanceOperations, bo => bo.Id == id);
+        var customer = await DocumentCollection.Find(customerFilter).FirstOrDefaultAsync();
+
+        if (customer != null)
+        {
+            var balanceOperation = customer.BalanceOperations.FirstOrDefault(bo => bo.Id == id);
+            if (balanceOperation != null)
+            {
+                balanceOperation.ValidInformation.UpdateValidity(false);
+                await DocumentCollection.ReplaceOneAsync(x => x.Id == customer.Id, customer);
+            }
+        }
+    }
+    
+    
 }

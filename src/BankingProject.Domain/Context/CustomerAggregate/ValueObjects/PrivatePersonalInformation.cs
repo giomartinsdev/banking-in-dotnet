@@ -1,6 +1,8 @@
-﻿namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
+﻿using BankingProject.Domain.Abstractions;
 
-public class PrivatePersonalInformation
+namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
+
+public class PrivatePersonalInformation : IValueObject
 {
     public string Email { get; set; }
     public string PhoneNumber { get; set; }
