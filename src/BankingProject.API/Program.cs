@@ -1,0 +1,78 @@
+using BankingProject.Application.Services;
+using BankingProject.Domain.Context.CustomerAggregate.Repositories;
+using Microsoft.Extensions.Hosting.DataPersistence.Banking;
+using MongoDB.Driver;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure MongoDB Guid serialization
+BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
+
+builder.AddServiceDefaults();
+
+builder.Services.AddProblemDetails();
+
+builder.Services.AddOpenApi();
+
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen
+(
+    option =>
+    {
+        option.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "Banking Project API",
+            Version = "v1",
+            Description = "API for the Banking Project"
+        });
+    }
+);
+
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("MongoDb");
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddScoped<IMongoDatabase>(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var databaseName = builder.Configuration["MongoDb:DatabaseName"];
+    return client.GetDatabase(databaseName);
+});
+
+builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+
+
+var app = builder.Build();
+
+app.UseExceptionHandler();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.RoutePrefix = string.Empty;
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    });
+}
+
+app.UseRouting();
+
+app.MapControllers();
+
+app.MapDefaultEndpoints();
+
+app.Run();
