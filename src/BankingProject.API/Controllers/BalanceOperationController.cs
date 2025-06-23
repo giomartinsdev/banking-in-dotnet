@@ -131,5 +131,4 @@ public class BalanceOperationController : ControllerBase
             return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
         }
     }
-    
 }

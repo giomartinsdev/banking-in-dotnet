@@ -55,10 +55,8 @@ public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerR
     public async Task<BalanceOperation?> GetBalanceOperationByIdAsync(Guid id)
     {
         var filter = Builders<Customer>.Filter.ElemMatch(c => c.BalanceOperations, bo => bo.Id == id);
-        return await DocumentCollection
-            .Find(filter)
-            .Project(c => c.BalanceOperations.FirstOrDefault())
-            .FirstOrDefaultAsync();
+        var customer = await DocumentCollection.Find(filter).FirstOrDefaultAsync();
+        return customer.BalanceOperations.FirstOrDefault(bo => bo.Id == id);
     }
     
     public async Task InsertBalanceOperationAsync(Guid customerId, BalanceOperation entity)
