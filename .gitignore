@@ -7,3 +7,4 @@ riderModule.iml
 *.DotSettings.user
 dataSources.xml
 .idea
+.vscode
