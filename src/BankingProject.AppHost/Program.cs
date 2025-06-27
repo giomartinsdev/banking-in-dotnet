@@ -9,7 +9,7 @@ var config = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
-var connectionString = config.GetConnectionString("MongoDb") ?? "mongodb://admin:admin@localhost:27017";
+var connectionString = config.GetConnectionString("MongoDb") ?? "mongodb://localhost:27017";
 var mongoUrlBuilder = new MongoUrlBuilder(connectionString);
 string username = mongoUrlBuilder.Username ?? "admin";
 string password = mongoUrlBuilder.Password ?? "admin";

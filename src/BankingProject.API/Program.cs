@@ -22,6 +22,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddSwaggerGen
 (
     option =>
@@ -43,14 +45,35 @@ builder.Services.AddSingleton<ActivitySource>(sp =>
 
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("MongoDb");
-    return new MongoClient(connectionString);
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    
+    // Try to get connection string from Aspire service discovery first
+    var connectionString = configuration.GetConnectionString("banking-db-server") ?? 
+                          configuration.GetConnectionString("MongoDb") ?? 
+                          "mongodb://localhost:27017";
+    
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("MongoDB connection string is not configured.");
+    }
+    
+    var settings = MongoClientSettings.FromConnectionString(connectionString);
+    settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+    settings.ConnectTimeout = TimeSpan.FromSeconds(30);
+    settings.SocketTimeout = TimeSpan.FromSeconds(30);
+    settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
+    
+    return new MongoClient(settings);
 });
 
 builder.Services.AddScoped<IMongoDatabase>(sp =>
 {
     var client = sp.GetRequiredService<IMongoClient>();
     var databaseName = builder.Configuration["MongoDb:DatabaseName"];
+    if (string.IsNullOrEmpty(databaseName))
+    {
+        throw new InvalidOperationException("MongoDB database name is not configured.");
+    }
     return client.GetDatabase(databaseName);
 });
 
@@ -69,6 +92,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 

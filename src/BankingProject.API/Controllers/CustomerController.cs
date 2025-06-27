@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using BankingProject.Application.Services;
+using BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 
 namespace BankingProject.ApiService.Controllers;
 
@@ -40,7 +41,7 @@ public class CustomerController : ControllerBase
         {
             activity.AddException(e);
             activity.SetStatus(ActivityStatusCode.Error, "Error saving customer");
-            return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
+            return BadRequest(new { Error = e.Message, Details = "Failed to create customer" });
         }
     }
 
@@ -71,10 +72,10 @@ public class CustomerController : ControllerBase
         {
             activity.AddException(e);
             activity.SetStatus(ActivityStatusCode.Error, "Error retrieving customer");
-            return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
+            return BadRequest(new { Error = e.Message, Details = "Failed to retrieve customer by ID" });
         }
     }
-    
+
     [MapToApiVersion("1.0")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -97,10 +98,10 @@ public class CustomerController : ControllerBase
         {
             activity.AddException(e);
             activity.SetStatus(ActivityStatusCode.Error, "Error retrieving all customers");
-            return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
+            return BadRequest(new { Error = e.Message, Details = "Failed to retrieve all customers" });
         }
     }
-    
+
     [MapToApiVersion("1.0")]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -117,7 +118,7 @@ public class CustomerController : ControllerBase
         {
             Customer? customer = await _customerService.GetCustomerByIdAsync(id);
             if (customer == null) return NotFound("Customer not found");
-            
+
             await _customerService.DeleteCustomerAsync(customer);
             activity.SetStatus(ActivityStatusCode.Ok, "Customer deleted successfully");
             return Ok();
@@ -126,7 +127,7 @@ public class CustomerController : ControllerBase
         {
             activity.AddException(e);
             activity.SetStatus(ActivityStatusCode.Error, "Error deleting customer");
-            return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
+            return BadRequest(new { Error = e.Message, Details = "Failed to delete customer" });
         }
     }
 
