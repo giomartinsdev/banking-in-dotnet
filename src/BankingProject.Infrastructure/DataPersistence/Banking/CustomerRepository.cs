@@ -82,37 +82,20 @@ public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerR
         }
     }
 
-    public async Task TransferBalanceAsync(Guid fromCustomerId, Guid toCustomerId, int amount, string description = "")
+    public async Task TransferBalanceAsync(Guid fromCustomerId, Guid toCustomerId, int amount, string description)
     {
         Customer? fromCustomer = await GetByIdAsync(fromCustomerId);
         Customer? toCustomer = await GetByIdAsync(toCustomerId);
-
         if (fromCustomer == null || toCustomer == null)
             throw new InvalidOperationException("One or both customers not found");
         if (fromCustomer.Balance < amount)
             throw new InvalidOperationException("User does not have enough balance");
 
-        bool result = await DoTransferAtomicOperationAsync(fromCustomerId, toCustomerId, amount, description);
+        var validInformation = new ValidInformation(true);
+        var op = new BalanceOperation(amount, description, validInformation);
+        var negativeOp = new BalanceOperation(op.NegativeBalanceOperationAmount(), description, validInformation);
 
-        if (!result)
-            throw new InvalidOperationException("Transfer operation failed");
+        await InsertBalanceOperationAsync(fromCustomerId, negativeOp);
+        await InsertBalanceOperationAsync(toCustomerId, op);
     }
-
-    public async Task<bool> DoTransferAtomicOperationAsync(Guid fromCustomerId, Guid toCustomerId, int amount, string description = "")
-    {
-        using var session = await DocumentCollection.Database.Client.StartSessionAsync();
-        session.StartTransaction();
-        try
-        {
-            await TransferBalanceAsync(fromCustomerId, toCustomerId, amount, description);
-            await session.CommitTransactionAsync();
-            return true;
-        }
-        catch
-        {
-            await session.AbortTransactionAsync();
-            return false;
-        }
-    }
-
 }
