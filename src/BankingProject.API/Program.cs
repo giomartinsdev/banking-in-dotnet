@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using BankingProject.API.Extensions;
 using BankingProject.Application.Services;
 using BankingProject.Domain.Context.CustomerAggregate.Repositories;
 using BankingProject.Infrastructure;
@@ -79,7 +80,8 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
 
 var app = builder.Build();
 
-app.UseExceptionHandler();
+// Global exception handling middleware (must be first in pipeline)
+app.UseGlobalExceptionHandling();
 
 if (app.Environment.IsDevelopment())
 {

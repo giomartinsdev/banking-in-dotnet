@@ -37,19 +37,10 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
 
-        try
-        {
-            var customerResponse = await _customerService.CreateCustomerAsync(request);
+        var customerResponse = await _customerService.CreateCustomerAsync(request);
 
-            activity.SetStatus(ActivityStatusCode.Ok, "Customer created successfully");
-            return CreatedAtAction(nameof(GetCustomerById), new { id = customerResponse.Id }, customerResponse);
-        }
-        catch (Exception e)
-        {
-            activity.AddException(e);
-            activity.SetStatus(ActivityStatusCode.Error, "Error saving customer");
-            return BadRequest(new { Error = e.Message, Details = "Failed to create customer" });
-        }
+        activity.SetStatus(ActivityStatusCode.Ok, "Customer created successfully");
+        return CreatedAtAction(nameof(GetCustomerById), new { id = customerResponse.Id }, customerResponse);
     }
 
     /// <summary>
@@ -70,24 +61,15 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
 
-        try
+        var customer = await _customerService.GetCustomerByIdDtoAsync(id);
+        if (customer == null)
         {
-            var customer = await _customerService.GetCustomerByIdDtoAsync(id);
-            if (customer == null)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Customer not found");
-                return NotFound(new { Error = "Customer not found" });
-            }
+            activity.SetStatus(ActivityStatusCode.Error, "Customer not found");
+            return NotFound(new { Error = "Customer not found" });
+        }
 
-            activity.SetStatus(ActivityStatusCode.Ok, "Customer retrieved successfully");
-            return Ok(customer);
-        }
-        catch (Exception e)
-        {
-            activity.AddException(e);
-            activity.SetStatus(ActivityStatusCode.Error, "Error retrieving customer");
-            return BadRequest(new { Error = e.Message, Details = "Failed to retrieve customer by ID" });
-        }
+        activity.SetStatus(ActivityStatusCode.Ok, "Customer retrieved successfully");
+        return Ok(customer);
     }
 
     /// <summary>
@@ -106,18 +88,9 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
 
-        try
-        {
-            var customers = await _customerService.GetAllCustomersDtoAsync();
-            activity.SetStatus(ActivityStatusCode.Ok, "All customers retrieved successfully");
-            return Ok(customers);
-        }
-        catch (Exception e)
-        {
-            activity.AddException(e);
-            activity.SetStatus(ActivityStatusCode.Error, "Error retrieving all customers");
-            return BadRequest(new { Error = e.Message, Details = "Failed to retrieve all customers" });
-        }
+        var customers = await _customerService.GetAllCustomersDtoAsync();
+        activity.SetStatus(ActivityStatusCode.Ok, "All customers retrieved successfully");
+        return Ok(customers);
     }
 
     /// <summary>
@@ -137,24 +110,15 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
 
-        try
+        var deleted = await _customerService.DeleteCustomerByIdAsync(id);
+        if (!deleted)
         {
-            var deleted = await _customerService.DeleteCustomerByIdAsync(id);
-            if (!deleted)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Customer not found");
-                return NotFound(new { Error = "Customer not found" });
-            }
+            activity.SetStatus(ActivityStatusCode.Error, "Customer not found");
+            return NotFound(new { Error = "Customer not found" });
+        }
 
-            activity.SetStatus(ActivityStatusCode.Ok, "Customer deleted successfully");
-            return Ok(new { Message = "Customer deleted successfully" });
-        }
-        catch (Exception e)
-        {
-            activity.AddException(e);
-            activity.SetStatus(ActivityStatusCode.Error, "Error deleting customer");
-            return BadRequest(new { Error = e.Message, Details = "Failed to delete customer" });
-        }
+        activity.SetStatus(ActivityStatusCode.Ok, "Customer deleted successfully");
+        return Ok(new { Message = "Customer deleted successfully" });
     }
 
     /// <summary>
@@ -168,7 +132,7 @@ public class CustomerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateCustomerField(Guid id, [FromBody] UpdateCustomerRequest request)
+    public async Task<IActionResult> UpdateCustomer(Guid id, [FromBody] UpdateCustomerRequest request)
     {
         using var activity = _activitySource.StartActivity
         (
@@ -176,32 +140,27 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
 
-        try
+        if (request == null)
         {
-            if (request == null)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "No update data provided");
-                return BadRequest(new { Error = "No update data provided" });
-            }
-
-            // For now, we'll use the legacy method until we fix the value objects
-            // In a proper DDD implementation, we'd use: await _customerService.UpdateCustomerAsync(id, request);
-            var customer = await _customerService.GetCustomerByIdAsync(id);
-            if (customer == null)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Customer not found");
-                return NotFound(new { Error = "Customer not found" });
-            }
-
-            activity.SetStatus(ActivityStatusCode.Ok, "Customer updated successfully");
-            return Ok(customer);
+            activity.SetStatus(ActivityStatusCode.Error, "No update data provided");
+            return BadRequest(new { Error = "No update data provided" });
         }
-        catch (Exception e)
+
+        if (!request.HasAnyValue())
         {
-            activity.AddException(e);
-            activity.SetStatus(ActivityStatusCode.Error, "Error updating customer");
-            return BadRequest(new { Error = e.Message });
+            activity.SetStatus(ActivityStatusCode.Error, "At least one field must be provided for update");
+            return BadRequest(new { Error = "At least one field must be provided for update" });
         }
+
+        var updatedCustomer = await _customerService.UpdateCustomerAsync(id, request);
+        if (updatedCustomer == null)
+        {
+            activity.SetStatus(ActivityStatusCode.Error, "Customer not found");
+            return NotFound(new { Error = "Customer not found" });
+        }
+
+        activity.SetStatus(ActivityStatusCode.Ok, "Customer updated successfully");
+        return Ok(updatedCustomer);
     }
 
 
@@ -223,50 +182,35 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
         
-        try
+        // Validate input parameters
+        if (request == null)
         {
-            // Validate input parameters
-            if (request == null)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Transfer request is required");
-                return BadRequest(new { Error = "Transfer request is required" });
-            }
+            activity.SetStatus(ActivityStatusCode.Error, "Transfer request is required");
+            return BadRequest(new { Error = "Transfer request is required" });
+        }
 
-            if (senderCustomerId == Guid.Empty)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Invalid sender customer ID");
-                return BadRequest(new { Error = "Sender customer ID cannot be empty" });
-            }
-            
-            if (request.TargetCustomerId == Guid.Empty)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Invalid target customer ID");
-                return BadRequest(new { Error = "Target customer ID cannot be empty" });
-            }
-            
-            if (request.Amount <= 0)
-            {
-                activity.SetStatus(ActivityStatusCode.Error, "Invalid transfer amount");
-                return BadRequest(new { Error = "Transfer amount must be greater than zero" });
-            }
+        if (senderCustomerId == Guid.Empty)
+        {
+            activity.SetStatus(ActivityStatusCode.Error, "Invalid sender customer ID");
+            return BadRequest(new { Error = "Sender customer ID cannot be empty" });
+        }
+        
+        if (request.TargetCustomerId == Guid.Empty)
+        {
+            activity.SetStatus(ActivityStatusCode.Error, "Invalid target customer ID");
+            return BadRequest(new { Error = "Target customer ID cannot be empty" });
+        }
+        
+        if (request.Amount <= 0)
+        {
+            activity.SetStatus(ActivityStatusCode.Error, "Invalid transfer amount");
+            return BadRequest(new { Error = "Transfer amount must be greater than zero" });
+        }
 
-            var transferResponse = await _customerService.TransferBalanceDtoAsync(senderCustomerId, request);
-            
-            activity.SetStatus(ActivityStatusCode.Ok, "Balance transferred successfully");
-            return Ok(transferResponse);
-        }
-        catch (InvalidOperationException ex)
-        {
-            activity.AddException(ex);
-            activity.SetStatus(ActivityStatusCode.Error, "Transfer failed due to insufficient balance or invalid customer");
-            return BadRequest(new { Error = ex.Message });
-        }
-        catch (Exception e)
-        {
-            activity.AddException(e);
-            activity.SetStatus(ActivityStatusCode.Error, "Error transferring balance");
-            return BadRequest(new { Error = e.Message, Details = "Failed to transfer balance" });
-        }
+        var transferResponse = await _customerService.TransferBalanceDtoAsync(senderCustomerId, request);
+        
+        activity.SetStatus(ActivityStatusCode.Ok, "Balance transferred successfully");
+        return Ok(transferResponse);
     }
 }
 

@@ -71,4 +71,53 @@ public static class CustomerMappingExtensions
 
         return customers.Select(customer => customer.ToResponse());
     }
+
+    /// <summary>
+    /// Updates a Customer domain entity with values from UpdateCustomerRequest DTO
+    /// </summary>
+    /// <param name="customer">The customer domain entity to update</param>
+    /// <param name="request">The update customer request DTO</param>
+    /// <returns>Updated customer domain entity</returns>
+    public static Customer UpdateFromRequest(this Customer customer, UpdateCustomerRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(customer, nameof(customer));
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        // Update OpenPersonalInformation if any name fields are provided
+        if (!string.IsNullOrWhiteSpace(request.FirstName) || !string.IsNullOrWhiteSpace(request.LastName))
+        {
+            var firstName = !string.IsNullOrWhiteSpace(request.FirstName)
+                ? request.FirstName
+                : customer.OpenPersonalInformation.FirstName;
+
+            var lastName = !string.IsNullOrWhiteSpace(request.LastName)
+                ? request.LastName
+                : customer.OpenPersonalInformation.LastName;
+
+            customer.OpenPersonalInformation = new OpenPersonalInformation(firstName, lastName);
+        }
+
+        // Update PrivatePersonalInformation if any contact fields are provided
+        if (!string.IsNullOrWhiteSpace(request.Email) || !string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            var email = !string.IsNullOrWhiteSpace(request.Email)
+                ? request.Email
+                : customer.PrivatePersonalInformation.Email;
+
+            var phoneNumber = !string.IsNullOrWhiteSpace(request.PhoneNumber)
+                ? request.PhoneNumber
+                : customer.PrivatePersonalInformation.PhoneNumber;
+
+            // Keep existing merchant document and password
+            customer.PrivatePersonalInformation = new PrivatePersonalInformation
+            {
+                Email = email,
+                PhoneNumber = phoneNumber,
+                MerchantDocument = customer.PrivatePersonalInformation.MerchantDocument,
+                Password = customer.PrivatePersonalInformation.Password
+            };
+        }
+
+        return customer;
+    }
 }

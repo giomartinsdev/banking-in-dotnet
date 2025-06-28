@@ -98,6 +98,38 @@ public class CustomerService
         return true;
     }
 
+    /// <summary>
+    /// Updates a customer with the provided DTO data
+    /// </summary>
+    /// <param name="id">The customer ID</param>
+    /// <param name="request">The update customer request DTO</param>
+    /// <returns>Updated CustomerResponse DTO or null if customer not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
+    /// <exception cref="ArgumentException">Thrown when no fields are provided for update</exception>
+    public async Task<CustomerResponse?> UpdateCustomerAsync(Guid id, UpdateCustomerRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        if (!request.HasAnyValue())
+        {
+            throw new ArgumentException("At least one field must be provided for update", nameof(request));
+        }
+
+        var customer = await _customerRepository.GetByIdAsync(id);
+        if (customer == null)
+        {
+            return null;
+        }
+
+        // Update the customer using the mapping extension
+        customer.UpdateFromRequest(request);
+        
+        // Save the updated customer
+        await _customerRepository.UpdateAsync(customer);
+        
+        return customer.ToResponse();
+    }
+
     #endregion
 
     #region Legacy Methods (for backward compatibility)
