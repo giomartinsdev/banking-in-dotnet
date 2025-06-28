@@ -7,8 +7,8 @@ namespace BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 public class BalanceOperation : IValueObject
 {
     [BsonRepresentation(BsonType.String)]
-    public Guid Id {get ; private init; }
-    public int Amount { get; private init; }
+    public Guid Id { get; private init; }
+    public int Amount { get; set; }
     public string Description { get; private init; }
     public ValidInformation ValidInformation { get; set; }
 

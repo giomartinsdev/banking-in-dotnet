@@ -169,4 +169,36 @@ public class CustomerController : ControllerBase
             return BadRequest(new { Error = e.Message });
         }
     }
+
+
+    [MapToApiVersion("1.0")]
+    [HttpPost("transfer")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> TransferBalance(Guid senderCustomerId, [FromQuery] Guid targetCustomerId, [FromQuery] int amount)
+    {
+        using var activity = _activitySource.StartActivity(
+            $"{HttpContext.Request.Path} | Transferring balance to customer",
+            ActivityKind.Server
+        )!;
+        try
+        {
+            await _customerService.TransferBalanceAsync(senderCustomerId, targetCustomerId, amount, $"{senderCustomerId} | {targetCustomerId} | {amount}");
+            return Ok(new { Message = "Balance transferred successfully", Amount = amount, FromCustomerId = senderCustomerId, ToCustomerId = targetCustomerId });
+        }
+        catch (InvalidOperationException ex)
+        {
+            activity.AddException(ex);
+            activity.SetStatus(ActivityStatusCode.Error, "Transfer failed due to insufficient balance or invalid customer");
+            return BadRequest(new { Error = ex.Message });
+        }
+        catch (Exception e)
+        {
+            activity.AddException(e);
+            activity.SetStatus(ActivityStatusCode.Error, "Error transferring balance");
+            return BadRequest(new { Error = e.Message, Details = "Failed to transfer balance" });
+        }
+    }
 }
+

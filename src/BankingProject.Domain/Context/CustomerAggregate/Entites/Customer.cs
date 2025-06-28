@@ -11,6 +11,15 @@ public class Customer : IAggregateRoot
     public PrivatePersonalInformation PrivatePersonalInformation { get; set; }
     public List<BalanceOperation> BalanceOperations { get; set; }
     public ValidInformation ValidInformation { get; set; }
+
+    #region Calculated Properties
+    [BsonIgnore]
+    public int Balance => BalanceOperations
+                            .Where(bo => bo.ValidInformation.IsValid == true)
+                            .Sum(bo => bo.Amount);
+
+    #endregion
+
     public Customer
     (
         OpenPersonalInformation openPersonalInformation,

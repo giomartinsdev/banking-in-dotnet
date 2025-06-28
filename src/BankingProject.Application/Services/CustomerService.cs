@@ -1,25 +1,24 @@
 ﻿using System.Reflection;
 using BankingProject.Domain.Context.CustomerAggregate.Repositories;
-using BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 
 namespace BankingProject.Application.Services;
 
 public class CustomerService
 {
     private readonly ICustomerRepository _customerRepository;
-    
+
     public CustomerService(ICustomerRepository customerRepository)
     {
         _customerRepository = customerRepository;
     }
-    
+
     public async Task SaveCustomerAsync(Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
 
         await _customerRepository.SaveAsync(customer);
     }
-    
+
     public async Task<Customer?> UpdateFieldsAsync(Guid id, Dictionary<string, string>? updates)
     {
         ArgumentNullException.ThrowIfNull(updates);
@@ -36,7 +35,7 @@ public class CustomerService
             var fieldValue = update.Value;
 
             var property = customer.GetType().GetProperty(fieldName, BindingFlags.Public | BindingFlags.Instance);
-            
+
             if (property != null && property.CanWrite)
             {
                 try
@@ -55,7 +54,7 @@ public class CustomerService
                 {
                     var parentPropName = parts[0];
                     var childPropName = parts[1];
-                    
+
                     var parentProperty = customer.GetType().GetProperty(parentPropName, BindingFlags.Public | BindingFlags.Instance);
                     if (parentProperty != null)
                     {
@@ -104,35 +103,42 @@ public class CustomerService
         await _customerRepository.UpdateAsync(customer);
         return customer;
     }
-    
+
     public async Task<Customer?> GetCustomerByIdAsync(Guid id)
     {
         return await _customerRepository.GetByIdAsync(id);
     }
-    
+
     public async Task<Customer?> FindCustomerByMerchantAsync(string merchantDocument)
     {
         ArgumentNullException.ThrowIfNull(merchantDocument);
 
         return await _customerRepository.GetByMerchantAsync(merchantDocument);
     }
-    
+
     public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
     {
         return await _customerRepository.GetAllAsync();
     }
-    
+
     public async Task DeleteCustomerAsync(Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
 
         await _customerRepository.DeleteAsync(customer);
     }
-    
+
     public async Task UpdateCustomerAsync(Customer customer)
     {
         ArgumentNullException.ThrowIfNull(customer);
 
         await _customerRepository.UpdateAsync(customer);
+    }
+
+    public async Task TransferBalanceAsync(Guid fromCustomerId, Guid toCustomerId, int amount, string description = "")
+    {
+        if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be greater than zero");
+
+        await _customerRepository.TransferBalanceAsync(fromCustomerId, toCustomerId, amount, description);
     }
 }
