@@ -22,4 +22,9 @@ public class BalanceOperation : IValueObject
         Description = description;
         ValidInformation = validInformation;
     }
+
+    public int NegativeBalanceOperationAmount()
+    {
+        return Amount * -1;
+    }
 }
