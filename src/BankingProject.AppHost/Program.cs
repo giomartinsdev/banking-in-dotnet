@@ -36,12 +36,10 @@ IResourceBuilder<MongoDBDatabaseResource> databaseServer = builder
     })
     .AddDatabase("banking-db");
 
-builder.AddProject<Projects.BankingProject_API>("api")
+var api = builder.AddProject<Projects.BankingProject_API>("api")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(databaseServer)
-    .WaitFor(databaseServer)
-    .WithReference(kafkaServer)
-    .WaitFor(kafkaServer);
+    .WithReference(kafkaServer);
 
 builder.Build().Run();

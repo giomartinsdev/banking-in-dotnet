@@ -24,7 +24,7 @@ public static class CustomerMappingExtensions
             LastName = customer.OpenPersonalInformation.LastName,
             Email = customer.PrivatePersonalInformation.Email,
             PhoneNumber = customer.PrivatePersonalInformation.PhoneNumber,
-            Balance = customer.Balance,
+            Balance = customer.GetBalance(),
             CreatedAt = customer.ValidInformation.CreatedAt,
             IsActive = customer.ValidInformation.IsValid
         };
