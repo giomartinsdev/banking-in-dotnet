@@ -11,18 +11,14 @@ var config = new ConfigurationBuilder()
 
 var connectionString = config.GetConnectionString("MongoDb") ?? "mongodb://localhost:27017";
 var mongoUrlBuilder = new MongoUrlBuilder(connectionString);
-string username = mongoUrlBuilder.Username ?? "admin";
-string password = mongoUrlBuilder.Password ?? "admin";
 
-IResourceBuilder<ParameterResource> databaseUsername = builder.AddParameter("mongousername", publishValueAsDefault: true, value: username);
-IResourceBuilder<ParameterResource> databasePassword = builder.AddParameter("mongopassword", publishValueAsDefault: true, value: password);
+IResourceBuilder<ParameterResource> databaseUsername = builder
+    .AddParameter("mongousername", mongoUrlBuilder.Username ?? "admin", true);
+IResourceBuilder<ParameterResource> databasePassword = builder
+    .AddParameter("mongopassword", mongoUrlBuilder.Password ?? "admin", true)
+    .WithReferenceRelationship(databaseUsername);
 
-var kafkaServer = builder
-    .AddKafka("banking-kafka-server", 9092)
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithKafkaUI();
-
-IResourceBuilder<MongoDBDatabaseResource> databaseServer = builder
+IResourceBuilder<MongoDBServerResource> databaseServer = builder
     .AddMongoDB("banking-db-server", 27017, databaseUsername, databasePassword)
     .WithEnvironment("MONGO_INITDB_ROOT_USERNAME", databaseUsername.Resource.Value)
     .WithEnvironment("MONGO_INITDB_ROOT_PASSWORD", databasePassword.Resource.Value)
@@ -33,15 +29,13 @@ IResourceBuilder<MongoDBDatabaseResource> databaseServer = builder
         configure.WithEnvironment("ME_CONFIG_MONGODB_ADMINUSERNAME", databaseUsername.Resource.Value);
         configure.WithEnvironment("ME_CONFIG_MONGODB_ADMINPASSWORD", databasePassword.Resource.Value);
         configure.WithLifetime(ContainerLifetime.Persistent);
-    })
-    .AddDatabase("banking-db");
+    });
 
-builder.AddProject<Projects.BankingProject_API>("api")
+databasePassword.WithReferenceRelationship(databaseServer);
+databaseUsername.WithReferenceRelationship(databaseServer);
+
+var api = builder.AddProject<Projects.BankingProject_API>("api")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
-    .WithReference(databaseServer)
-    .WaitFor(databaseServer)
-    .WithReference(kafkaServer)
-    .WaitFor(kafkaServer);
-
+    .WithReference(databaseServer);
 builder.Build().Run();

@@ -1,4 +1,4 @@
-using System.Reflection;
+using System.Diagnostics;
 using BankingProject.Application.DTOs.BalanceOperationDTOs;
 using BankingProject.Application.DTOs.CustomerDTOs;
 using BankingProject.Application.Extensions;
@@ -6,52 +6,119 @@ using BankingProject.Domain.Context.CustomerAggregate.Repositories;
 
 namespace BankingProject.Application.Services;
 
+/// <summary>
+/// Service for customer-related operations following DDD and Microsoft standards
+/// </summary>
 public class CustomerService
 {
     private readonly ICustomerRepository _customerRepository;
+    private readonly ActivitySource _activitySource;
 
-    public CustomerService(ICustomerRepository customerRepository)
+    public CustomerService(ICustomerRepository customerRepository, ActivitySource activitySource)
     {
         _customerRepository = customerRepository;
+        _activitySource = activitySource;
     }
-
-    #region DTO-based Methods (Recommended for API Controllers)
 
     /// <summary>
     /// Creates a new customer from a DTO request
     /// </summary>
     /// <param name="request">The create customer request DTO</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>CustomerResponse DTO</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
-    public async Task<CustomerResponse> CreateCustomerAsync(CreateCustomerRequest request)
+    public async Task<CustomerResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request, nameof(request));
-
-        var customer = request.ToDomainEntity();
-        await _customerRepository.SaveAsync(customer);
+        using var activity = _activitySource.StartActivity("CustomerService.CreateCustomer");
+        activity?.SetTag("operation", "create_customer");
+        activity?.SetTag("customer.email", request?.Email);
         
-        return customer.ToResponse();
+        try
+        {
+            ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+            var customer = request.ToDomainEntity();
+            await _customerRepository.SaveAsync(customer);
+            
+            var response = customer.ToResponse();
+            activity?.SetTag("customer.id", response.Id.ToString());
+            activity?.SetStatus(ActivityStatusCode.Ok, "Customer created successfully");
+            
+            return response;
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     /// <summary>
     /// Gets a customer by ID and returns as DTO
     /// </summary>
     /// <param name="id">The customer ID</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>CustomerResponse DTO or null if not found</returns>
-    public async Task<CustomerResponse?> GetCustomerByIdDtoAsync(Guid id)
+    public async Task<CustomerResponse?> GetCustomerByIdDtoAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var customer = await _customerRepository.GetByIdAsync(id);
-        return customer?.ToResponse();
+        using var activity = _activitySource.StartActivity("CustomerService.GetCustomerById");
+        activity?.SetTag("operation", "get_customer_by_id");
+        activity?.SetTag("customer.id", id.ToString());
+        
+        try
+        {
+            var customer = await _customerRepository.GetByIdAsync(id);
+            var response = customer?.ToResponse();
+            
+            if (response != null)
+            {
+                activity?.SetTag("customer.found", "true");
+                activity?.SetTag("customer.email", response.Email);
+                activity?.SetStatus(ActivityStatusCode.Ok, "Customer retrieved successfully");
+            }
+            else
+            {
+                activity?.SetTag("customer.found", "false");
+                activity?.SetStatus(ActivityStatusCode.Ok, "Customer not found");
+            }
+            
+            return response;
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     /// <summary>
     /// Gets all customers and returns as DTOs
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>Collection of CustomerResponse DTOs</returns>
-    public async Task<IEnumerable<CustomerResponse>> GetAllCustomersDtoAsync()
+    public async Task<IEnumerable<CustomerResponse>> GetAllCustomersDtoAsync(CancellationToken cancellationToken = default)
     {
-        var customers = await _customerRepository.GetAllAsync();
-        return customers.ToResponseList();
+        using var activity = _activitySource.StartActivity("CustomerService.GetAllCustomers");
+        activity?.SetTag("operation", "get_all_customers");
+        
+        try
+        {
+            var customers = await _customerRepository.GetAllAsync();
+            var responses = customers.ToResponseList();
+            
+            activity?.SetTag("customers.count", responses.Count().ToString());
+            activity?.SetStatus(ActivityStatusCode.Ok, $"Retrieved {responses.Count()} customers successfully");
+            
+            return responses;
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     /// <summary>
@@ -59,43 +126,80 @@ public class CustomerService
     /// </summary>
     /// <param name="senderCustomerId">The sender customer ID</param>
     /// <param name="request">The transfer request DTO</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>TransferBalanceResponse DTO</returns>
-    public async Task<TransferBalanceResponse> TransferBalanceDtoAsync(Guid senderCustomerId, TransferBalanceRequest request)
+    public async Task<TransferBalanceResponse> TransferBalanceDtoAsync(Guid senderCustomerId, TransferBalanceRequest request, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request, nameof(request));
-
-        await _customerRepository.TransferBalanceAsync(
-            senderCustomerId, 
-            request.TargetCustomerId, 
-            request.Amount, 
-            request.Description);
-
-        return new TransferBalanceResponse
+        using var activity = _activitySource.StartActivity("CustomerService.TransferBalance");
+        activity?.SetTag("operation", "transfer_balance");
+        activity?.SetTag("sender.id", senderCustomerId.ToString());
+        activity?.SetTag("recipient.id", request?.TargetCustomerId.ToString());
+        activity?.SetTag("amount", request?.Amount.ToString());
+        
+        try
         {
-            Message = "Balance transferred successfully",
-            Amount = request.Amount,
-            FromCustomerId = senderCustomerId,
-            ToCustomerId = request.TargetCustomerId,
-            TransactionDate = DateTime.UtcNow,
-            Description = request.Description
-        };
+            ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+            await _customerRepository.TransferBalanceAsync(
+                senderCustomerId, 
+                request.TargetCustomerId, 
+                request.Amount, 
+                request.Description);
+
+            var response = new TransferBalanceResponse
+            {
+                Message = "Balance transferred successfully",
+                Amount = request.Amount,
+                FromCustomerId = senderCustomerId,
+                ToCustomerId = request.TargetCustomerId,
+                TransactionDate = DateTime.UtcNow,
+                Description = request.Description
+            };
+            
+            activity?.SetStatus(ActivityStatusCode.Ok, "Balance transferred successfully");
+            return response;
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     /// <summary>
     /// Deletes a customer by ID
     /// </summary>
     /// <param name="id">The customer ID</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>True if deleted, false if not found</returns>
-    public async Task<bool> DeleteCustomerByIdAsync(Guid id)
+    public async Task<bool> DeleteCustomerByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
+        using var activity = _activitySource.StartActivity("CustomerService.DeleteCustomer");
+        activity?.SetTag("operation", "delete_customer");
+        activity?.SetTag("customer.id", id.ToString());
+        
+        try
         {
-            return false;
-        }
+            var customer = await _customerRepository.GetByIdAsync(id);
+            if (customer == null)
+            {
+                activity?.SetTag("customer.found", "false");
+                activity?.SetStatus(ActivityStatusCode.Ok, "Customer not found");
+                return false;
+            }
 
-        await _customerRepository.DeleteAsync(customer);
-        return true;
+            await _customerRepository.DeleteAsync(customer);
+            activity?.SetTag("customer.found", "true");
+            activity?.SetStatus(ActivityStatusCode.Ok, "Customer deleted successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
     /// <summary>
@@ -103,124 +207,58 @@ public class CustomerService
     /// </summary>
     /// <param name="id">The customer ID</param>
     /// <param name="request">The update customer request DTO</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
     /// <returns>Updated CustomerResponse DTO or null if customer not found</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="ArgumentException">Thrown when no fields are provided for update</exception>
-    public async Task<CustomerResponse?> UpdateCustomerAsync(Guid id, UpdateCustomerRequest request)
+    public async Task<CustomerResponse?> UpdateCustomerAsync(Guid id, UpdateCustomerRequest request, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request, nameof(request));
-
-        if (!request.HasAnyValue())
+        using var activity = _activitySource.StartActivity("CustomerService.UpdateCustomer");
+        activity?.SetTag("operation", "update_customer");
+        activity?.SetTag("customer.id", id.ToString());
+        var updatedProperties = request.GetType()
+            .GetProperties()
+            .Where(p => p.GetValue(request) != null)
+            .ToDictionary(p => p.Name.ToLower(), p => p.GetValue(request)?.ToString() ?? string.Empty);
+        foreach (var (key, value) in updatedProperties)
         {
-            throw new ArgumentException("At least one field must be provided for update", nameof(request));
+            activity?.SetTag($"customer.update.{key}", value);
         }
 
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
+        try
         {
-            return null;
-        }
+            ArgumentNullException.ThrowIfNull(request, nameof(request));
 
-        // Update the customer using the mapping extension
-        customer.UpdateFromRequest(request);
-        
-        // Save the updated customer
-        await _customerRepository.UpdateAsync(customer);
-        
-        return customer.ToResponse();
-    }
-
-    #endregion
-
-    #region Legacy Methods (for backward compatibility)
-
-    public async Task SaveCustomerAsync(Customer customer)
-    {
-        ArgumentNullException.ThrowIfNull(customer);
-        await _customerRepository.SaveAsync(customer);
-    }
-
-    public async Task<Customer?> GetCustomerByIdAsync(Guid id)
-    {
-        return await _customerRepository.GetByIdAsync(id);
-    }
-
-    public async Task<IEnumerable<Customer>> GetAllCustomersAsync()
-    {
-        return await _customerRepository.GetAllAsync();
-    }
-
-    public async Task DeleteCustomerAsync(Customer customer)
-    {
-        ArgumentNullException.ThrowIfNull(customer);
-        await _customerRepository.DeleteAsync(customer);
-    }
-
-    public async Task TransferBalanceAsync(Guid fromCustomerId, Guid toCustomerId, int amount, string description = "")
-    {
-        await _customerRepository.TransferBalanceAsync(fromCustomerId, toCustomerId, amount, description);
-    }
-
-    public async Task<Customer?> UpdateFieldsAsync(Guid id, Dictionary<string, string>? updates)
-    {
-        ArgumentNullException.ThrowIfNull(updates);
-
-        var customer = await _customerRepository.GetByIdAsync(id);
-        if (customer == null)
-        {
-            return null;
-        }
-
-        foreach (var update in updates)
-        {
-            var fieldName = update.Key;
-            var fieldValue = update.Value;
-
-            var property = customer.GetType().GetProperty(fieldName, BindingFlags.Public | BindingFlags.Instance);
-            
-            if (property != null && property.CanWrite)
+            if (!request.HasAnyValue())
             {
-                try
-                {
-                    property.SetValue(customer, Convert.ChangeType(fieldValue, property.PropertyType));
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"Cannot set property '{fieldName}' to value '{fieldValue}': {ex.Message}");
-                }
+                throw new ArgumentException("At least one field must be provided for update", nameof(request));
             }
-            else if (fieldName.Contains('.'))
-            {
-                var parts = fieldName.Split('.');
-                if (parts.Length == 2)
-                {
-                    var parentProperty = customer.GetType().GetProperty(parts[0], BindingFlags.Public | BindingFlags.Instance);
-                    if (parentProperty != null)
-                    {
-                        var parentValue = parentProperty.GetValue(customer);
-                        if (parentValue != null)
-                        {
-                            var childProperty = parentValue.GetType().GetProperty(parts[1], BindingFlags.Public | BindingFlags.Instance);
-                            if (childProperty != null && childProperty.CanWrite)
-                            {
-                                try
-                                {
-                                    childProperty.SetValue(parentValue, Convert.ChangeType(fieldValue, childProperty.PropertyType));
-                                }
-                                catch (Exception ex)
-                                {
-                                    throw new InvalidOperationException($"Cannot set nested property '{fieldName}' to value '{fieldValue}': {ex.Message}");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
-        await _customerRepository.UpdateAsync(customer);
-        return customer;
+            var customer = await _customerRepository.GetByIdAsync(id);
+            if (customer == null)
+            {
+                activity?.SetTag("customer.found", "false");
+                activity?.SetStatus(ActivityStatusCode.Ok, "Customer not found");
+                return null;
+            }
+
+            customer.UpdateFromRequest(request);
+
+            await _customerRepository.UpdateAsync(customer);
+
+            var response = customer.ToResponse();
+            activity?.SetTag("customer.found", "true");
+            activity?.SetTag("customer.email", response.Email);
+            activity?.SetStatus(ActivityStatusCode.Ok, "Customer updated successfully");
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            throw;
+        }
     }
 
-    #endregion
 }

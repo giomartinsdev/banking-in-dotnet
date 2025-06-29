@@ -1,13 +1,23 @@
-﻿using BankingProject.Domain.Context.CustomerAggregate.Repositories;
+﻿using System.Diagnostics;
+using BankingProject.Domain.Context.CustomerAggregate.Repositories;
 using BankingProject.Domain.Context.CustomerAggregate.ValueObjects;
 using BankingProject.Infrastructure.MongoDB;
 using MongoDB.Driver;
 
 namespace BankingProject.Infrastructure.DataPersistence.Banking;
 
+/// <summary>
+/// Repository for Customer aggregate operations with MongoDB tracing
+/// </summary>
 public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerRepository
 {
-    public CustomerRepository(IMongoDatabase database) : base(database, CollectionsEnum.Customers)
+    /// <summary>
+    /// Initializes a new instance of the CustomerRepository class
+    /// </summary>
+    /// <param name="database">The MongoDB database</param>
+    /// <param name="activitySource">The activity source for tracing</param>
+    public CustomerRepository(IMongoDatabase database, ActivitySource activitySource) 
+        : base(database, CollectionsEnum.Customers, activitySource)
     {
     }
 
