@@ -216,10 +216,13 @@ public class CustomerService
         using var activity = _activitySource.StartActivity("CustomerService.UpdateCustomer");
         activity?.SetTag("operation", "update_customer");
         activity?.SetTag("customer.id", id.ToString());
-        foreach (var property in request.GetType().GetProperties())
+        var updatedProperties = request.GetType()
+            .GetProperties()
+            .Where(p => p.GetValue(request) != null)
+            .ToDictionary(p => p.Name.ToLower(), p => p.GetValue(request)?.ToString() ?? string.Empty);
+        foreach (var (key, value) in updatedProperties)
         {
-            var value = property.GetValue(request);
-            activity?.SetTag($"update.{property.Name.ToLower()}", value != null ? "true" : "false");
+            activity?.SetTag($"customer.update.{key}", value);
         }
 
         try
