@@ -55,10 +55,8 @@ public sealed class MongoDbTracingService
         
         if (activity != null)
         {
-            // Store the activity for later completion
             _activityTracker[commandEvent.RequestId] = activity;
             
-            // Standard database tags following OpenTelemetry semantic conventions
             activity.SetTag("db.system", "mongodb");
             activity.SetTag("db.name", commandEvent.DatabaseNamespace?.DatabaseName ?? "unknown");
             activity.SetTag("db.operation", commandEvent.CommandName);
@@ -66,23 +64,20 @@ public sealed class MongoDbTracingService
             activity.SetTag("db.mongodb.command_name", commandEvent.CommandName);
             activity.SetTag("mongodb.request_id", commandEvent.RequestId.ToString());
             
-            // Aspire-specific tags for visual styling
             activity.SetTag("service.name", "MongoDB");
-            activity.SetTag("service.version", "1.0.0");
+            activity.SetTag("service.version", Extensions.ActivitySourceConfiguration.Version);
             activity.SetTag("component", "database");
             activity.SetTag("span.kind", "client");
             activity.SetTag("db.type", "nosql");
-            activity.SetTag("otel.library.name", "BankingProject.MongoDB");
-            activity.SetTag("otel.library.version", "1.0.0");
+            activity.SetTag("otel.library.name", Extensions.ActivitySourceConfiguration.MongoDbSourceName);
+            activity.SetTag("otel.library.version", Extensions.ActivitySourceConfiguration.Version);
             
-            // Custom tags for color/category identification in Aspire dashboard
             activity.SetTag("trace.category", "database");
             activity.SetTag("trace.color", GetOperationColor(commandEvent.CommandName));
             activity.SetTag("operation.type", "database");
             activity.SetTag("db.technology", "mongodb");
             activity.SetTag("resource.name", $"MongoDB.{commandEvent.CommandName}");
             
-            // Extract collection name safely
             ExtractCollectionName(commandEvent, activity);
             
             _logger.LogDebug("[MongoDB Trace] Started activity: {ActivityName} for command: {CommandName}", 

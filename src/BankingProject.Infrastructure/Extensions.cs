@@ -21,6 +21,37 @@ public static class Extensions
 {
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
+    
+    /// <summary>
+    /// ActivitySource configuration constants for telemetry tracing
+    /// </summary>
+    public static class ActivitySourceConfiguration
+    {
+        /// <summary>
+        /// The name of the MongoDB ActivitySource
+        /// </summary>
+        public const string MongoDbSourceName = "BankingProject.MongoDB";
+        
+        /// <summary>
+        /// The name of the API ActivitySource
+        /// </summary>
+        public const string ApiSourceName = "BankingProject.API";
+        
+        /// <summary>
+        /// The version for all ActivitySources in the application
+        /// </summary>
+        public const string Version = "1.0.0";
+        
+        /// <summary>
+        /// MongoDB Driver core extensions diagnostic source name
+        /// </summary>
+        public const string MongoDbDriverSourceName = "MongoDB.Driver.Core.Extensions.DiagnosticSources";
+        
+        /// <summary>
+        /// Generic MongoDB diagnostic source name
+        /// </summary>
+        public const string MongoDbGenericSourceName = "MongoDB";
+    }
 
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
@@ -57,10 +88,10 @@ public static class Extensions
             })
             .WithTracing(tracing =>
             {
-                tracing.AddSource("BankingProject.API")
-                    .AddSource("BankingProject.MongoDB") // Add MongoDB-specific source
-                    .AddSource("MongoDB.Driver.Core.Extensions.DiagnosticSources")
-                    .AddSource("MongoDB") // Add generic MongoDB source
+                tracing.AddSource(ActivitySourceConfiguration.ApiSourceName)
+                    .AddSource(ActivitySourceConfiguration.MongoDbSourceName)
+                    .AddSource(ActivitySourceConfiguration.MongoDbDriverSourceName)
+                    .AddSource(ActivitySourceConfiguration.MongoDbGenericSourceName)
                     .AddAspNetCoreInstrumentation(tracing =>
                         tracing.Filter = context =>
                             !context.Request.Path.StartsWithSegments(HealthEndpointPath)
@@ -95,14 +126,11 @@ public static class Extensions
     public static TBuilder AddMongoDbInfrastructure<TBuilder>(this TBuilder builder) 
         where TBuilder : IHostApplicationBuilder
     {
-        // Configure BSON serialization
         BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
         
-        // Register ActivitySource for MongoDB tracing
         builder.Services.AddSingleton<ActivitySource>(sp => 
-            new ActivitySource("BankingProject.MongoDB", "1.0.0"));
+            new ActivitySource(ActivitySourceConfiguration.MongoDbSourceName, ActivitySourceConfiguration.Version));
 
-        // Register MongoDB client without event-based tracing
         builder.Services.AddSingleton<IMongoClient>(sp =>
         {
             var configuration = sp.GetRequiredService<IConfiguration>();
@@ -117,7 +145,7 @@ public static class Extensions
             }
             
             var settings = MongoClientSettings.FromConnectionString(connectionString);
-            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+            var apiVersion = configuration["MongoDb:ServerApiVersion"] ?? "V1";
             settings.ConnectTimeout = TimeSpan.FromSeconds(30);
             settings.SocketTimeout = TimeSpan.FromSeconds(30);
             settings.ServerSelectionTimeout = TimeSpan.FromSeconds(15);

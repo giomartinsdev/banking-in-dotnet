@@ -216,11 +216,12 @@ public class CustomerService
         using var activity = _activitySource.StartActivity("CustomerService.UpdateCustomer");
         activity?.SetTag("operation", "update_customer");
         activity?.SetTag("customer.id", id.ToString());
-        activity?.SetTag("update.firstName", !string.IsNullOrWhiteSpace(request?.FirstName) ? "true" : "false");
-        activity?.SetTag("update.lastName", !string.IsNullOrWhiteSpace(request?.LastName) ? "true" : "false");
-        activity?.SetTag("update.email", !string.IsNullOrWhiteSpace(request?.Email) ? "true" : "false");
-        activity?.SetTag("update.phoneNumber", !string.IsNullOrWhiteSpace(request?.PhoneNumber) ? "true" : "false");
-        
+        foreach (var property in request.GetType().GetProperties())
+        {
+            var value = property.GetValue(request);
+            activity?.SetTag($"update.{property.Name.ToLower()}", value != null ? "true" : "false");
+        }
+
         try
         {
             ArgumentNullException.ThrowIfNull(request, nameof(request));
@@ -239,14 +240,14 @@ public class CustomerService
             }
 
             customer.UpdateFromRequest(request);
-            
+
             await _customerRepository.UpdateAsync(customer);
-            
+
             var response = customer.ToResponse();
             activity?.SetTag("customer.found", "true");
             activity?.SetTag("customer.email", response.Email);
             activity?.SetStatus(ActivityStatusCode.Ok, "Customer updated successfully");
-            
+
             return response;
         }
         catch (Exception ex)

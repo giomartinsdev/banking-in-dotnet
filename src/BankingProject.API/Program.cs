@@ -43,7 +43,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<BalanceOperationService>();
 
 builder.Services.AddSingleton<ActivitySource>(sp => 
-    new ActivitySource("BankingProject.API", "1.0.0"));
+    new ActivitySource(Extensions.ActivitySourceConfiguration.ApiSourceName, Extensions.ActivitySourceConfiguration.Version));
 
 builder.AddMongoDbInfrastructure();
 

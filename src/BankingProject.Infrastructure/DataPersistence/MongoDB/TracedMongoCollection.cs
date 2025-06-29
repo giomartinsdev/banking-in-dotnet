@@ -408,36 +408,4 @@ public sealed class TracedMongoCollection<TDocument>
         }
     }
 
-    public IAsyncCursor<TResult> Aggregate<TResult>(PipelineDefinition<TDocument, TResult> pipeline, AggregateOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.Aggregate(pipeline, options, cancellationToken);
-
-    public BulkWriteResult<TDocument> BulkWrite(IEnumerable<WriteModel<TDocument>> requests, BulkWriteOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.BulkWrite(requests, options, cancellationToken);
-
-    public long CountDocuments(FilterDefinition<TDocument> filter, CountOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.CountDocuments(filter, options, cancellationToken);
-
-    public DeleteResult DeleteMany(FilterDefinition<TDocument> filter, CancellationToken cancellationToken = default)
-        => _collection.DeleteMany(filter, cancellationToken);
-
-    public DeleteResult DeleteOne(FilterDefinition<TDocument> filter, CancellationToken cancellationToken = default)
-        => _collection.DeleteOne(filter, cancellationToken);
-
-    public TDocument? FindOneAndUpdate(FilterDefinition<TDocument> filter, UpdateDefinition<TDocument> update, FindOneAndUpdateOptions<TDocument>? options = null, CancellationToken cancellationToken = default)
-        => _collection.FindOneAndUpdate(filter, update, options, cancellationToken);
-
-    public void InsertOne(TDocument document, InsertOneOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.InsertOne(document, options, cancellationToken);
-
-    public ReplaceOneResult ReplaceOne(FilterDefinition<TDocument> filter, TDocument replacement, ReplaceOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.ReplaceOne(filter, replacement, options, cancellationToken);
-
-    public UpdateResult UpdateMany(FilterDefinition<TDocument> filter, UpdateDefinition<TDocument> update, UpdateOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.UpdateMany(filter, update, options, cancellationToken);
-
-    public UpdateResult UpdateOne(FilterDefinition<TDocument> filter, UpdateDefinition<TDocument> update, UpdateOptions? options = null, CancellationToken cancellationToken = default)
-        => _collection.UpdateOne(filter, update, options, cancellationToken);
-
-    // Additional method overloads would be implemented here following the same pattern...
-    // For brevity, only the most commonly used methods are shown
 }
