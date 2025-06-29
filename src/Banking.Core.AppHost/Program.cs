@@ -34,8 +34,10 @@ IResourceBuilder<MongoDBServerResource> databaseServer = builder
 databasePassword.WithReferenceRelationship(databaseServer);
 databaseUsername.WithReferenceRelationship(databaseServer);
 
-var api = builder.AddProject<Projects.BankingProject_API>("api")
+var api = builder.AddProject<Projects.Banking_Core_API>("api")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
     .WithReference(databaseServer);
 builder.Build().Run();
+
+Console.WriteLine($"{api.Resource.Name} started at time: {DateTime.Now:O}");

@@ -9,9 +9,9 @@
 
     <ItemGroup>
         <PackageReference Include="AspNetCore.HealthChecks.MongoDb" Version="9.0.0" />
-        <ProjectReference Include="..\BankingProject.Application\BankingProject.Application.csproj" />
-        <ProjectReference Include="..\BankingProject.Domain\BankingProject.Domain.csproj" />
-        <ProjectReference Include="..\BankingProject.Infrastructure\BankingProject.Infrastructure.csproj" />
+        <ProjectReference Include="..\Banking.Core.Application\Banking.Core.Application.csproj" />
+        <ProjectReference Include="..\Banking.Core.Domain\Banking.Core.Domain.csproj" />
+        <ProjectReference Include="..\Banking.Core.Infrastructure\Banking.Core.Infrastructure.csproj" />
         <PackageReference Include="Aspire.Hosting.MongoDB" Version="9.3.1" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />

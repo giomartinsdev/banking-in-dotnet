@@ -182,7 +182,6 @@ public class CustomerController : ControllerBase
             ActivityKind.Server
         )!;
         
-        // Validate input parameters
         if (request == null)
         {
             activity.SetStatus(ActivityStatusCode.Error, "Transfer request is required");
