@@ -8,10 +8,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>dbaaf498-af7f-4b34-9080-fe55e0f4e0cb</UserSecretsId>
+        <RootNamespace>BankingProject.AppHost</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BankingProject.API\BankingProject.API.csproj" />
+        <ProjectReference Include="..\Banking.Core.API\Banking.Core.API.csproj" />
     </ItemGroup>
 
     <ItemGroup>

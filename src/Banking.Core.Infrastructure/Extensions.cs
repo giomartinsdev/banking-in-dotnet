@@ -35,7 +35,7 @@ public static class Extensions
         /// <summary>
         /// The name of the API ActivitySource
         /// </summary>
-        public const string ApiSourceName = "BankingProject.API";
+        public const string ApiSourceName = "Banking.Core.API";
         
         /// <summary>
         /// The version for all ActivitySources in the application
