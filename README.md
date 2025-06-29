@@ -57,19 +57,34 @@ docs/
 
 ## Getting Started
 
+> **📚 For detailed running instructions, see [RUNNING.md](docs/RUNNING.md)**
+> 
+> **⚠️ Prerequisites**: Before running this project, follow the setup guide: [Running .NET Aspire in Visual Studio Code](https://github.com/giomartinsdev/run-dotnet-aspire-in-visual-studio-code)
+
+### Quick Start
+
 1. **Build the Solution:**
    ```powershell
    dotnet build Banking.Core.sln
    ```
-2. **Run the Application:**
+
+2. **Run with Aspire (Recommended):**
    ```powershell
-   dotnet run --project src/Banking.Core.AppHost/Banking.Core.AppHost.csproj
+   dotnet run --project src/Banking.Core.AppHost
    ```
-3. **Access the API:**
-   - API endpoints: `http://localhost:<api-port>/`
-   - Health check: `http://localhost:<api-port>/health`
-4. **Mongo Express:**
-   - `http://localhost:<mongo-express-port>/` (login with configured credentials)
+
+3. **Access the Services:**
+   - **API**: `https://localhost:7001` or `http://localhost:5001`
+   - **Health Check**: `https://localhost:7001/health`
+   - **Aspire Dashboard**: `http://localhost:15888`
+
+### Alternative: Run API Only
+```powershell
+dotnet run --project src/Banking.Core.API
+```
+
+### VS Code Users
+Press `F5` and select your preferred project type (API or AppHost) from the dropdown.
 
 ## Coding Standards
 
