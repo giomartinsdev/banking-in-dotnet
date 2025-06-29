@@ -10,7 +10,7 @@ public class Password : IValueObject
     public string Hash { get; set; }
     public string Pepper { get; set; }
     public int Iteration { get; set; }
-    
+
     public Password(string salt, string hash, string pepper, int iteration)
     {
         Salt = salt;
@@ -18,7 +18,7 @@ public class Password : IValueObject
         Pepper = pepper;
         Iteration = iteration;
     }
-    
+
     public static string GenerateSalt()
     {
         using var rng = RandomNumberGenerator.Create();
@@ -30,7 +30,7 @@ public class Password : IValueObject
 
     public static string ComputeHash(string salt, string password, string pepper, int iteration)
     {
-        if(iteration <= 0) return password;
+        if (iteration <= 0) return password;
         using var sha256 = SHA256.Create();
         var passwordSaltPepper = $"{password}{salt}{pepper}";
         var byteValue = Encoding.UTF8.GetBytes(passwordSaltPepper);

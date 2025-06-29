@@ -14,7 +14,7 @@ public abstract class GenericRepository<TEntity> : IGenericRepository<TEntity> w
     {
         DocumentCollection = database.GetCollection<TEntity>(collectionName.ToString());
     }
-    
+
     public async Task SaveAsync(TEntity entity)
     {
         await DocumentCollection.InsertOneAsync(entity);

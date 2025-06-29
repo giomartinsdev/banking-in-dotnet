@@ -12,14 +12,6 @@ public class Customer : IAggregateRoot
     public List<BalanceOperation> BalanceOperations { get; set; }
     public ValidInformation ValidInformation { get; set; }
 
-    #region Calculated Properties
-    [BsonIgnore]
-    public int Balance => BalanceOperations
-                            .Where(bo => bo.ValidInformation.IsValid == true)
-                            .Sum(bo => bo.Amount);
-
-    #endregion
-
     public Customer
     (
         OpenPersonalInformation openPersonalInformation,
@@ -33,5 +25,12 @@ public class Customer : IAggregateRoot
         BalanceOperations = balanceOperations ?? new List<BalanceOperation>();
         ValidInformation = validInformation;
         Id = Guid.CreateVersion7();
+    }
+
+    public int GetBalance()
+    {
+        return BalanceOperations
+            .Where(bo => bo.ValidInformation.IsValid)
+            .Sum(bo => bo.Amount);
     }
 }

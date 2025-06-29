@@ -15,6 +15,6 @@ public interface ICustomerRepository : IGenericRepository<Customer>
     public Task<BalanceOperation?> GetBalanceOperationByIdAsync(Guid id);
     public Task InsertBalanceOperationAsync(Guid customerId, BalanceOperation entity);
     public Task DeleteBalanceOperationAsync(Guid id);
-    
+
     public Task TransferBalanceAsync(Guid fromCustomerId, Guid toCustomerId, int amount, string description = "");
 }

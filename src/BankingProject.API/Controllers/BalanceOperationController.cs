@@ -11,13 +11,13 @@ public class BalanceOperationController : ControllerBase
 {
     private readonly BalanceOperationService _balanceOperationService;
     private readonly ActivitySource _activitySource;
-    
+
     public BalanceOperationController(BalanceOperationService balanceOperationService, ActivitySource activitySource)
     {
         _balanceOperationService = balanceOperationService;
         _activitySource = activitySource;
     }
-    
+
     [HttpPost("customer/{customerId:guid}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -43,7 +43,7 @@ public class BalanceOperationController : ControllerBase
             return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
         }
     }
-    
+
     [MapToApiVersion("1.0")]
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -74,7 +74,7 @@ public class BalanceOperationController : ControllerBase
             return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
         }
     }
-    
+
     [MapToApiVersion("1.0")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -105,7 +105,7 @@ public class BalanceOperationController : ControllerBase
             return BadRequest(new { Error = activity.Status == ActivityStatusCode.Error });
         }
     }
-    
+
     [MapToApiVersion("1.0")]
     [HttpDelete]
     [ProducesResponseType(StatusCodes.Status200OK)]

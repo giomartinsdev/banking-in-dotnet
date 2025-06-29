@@ -6,7 +6,7 @@ namespace BankingProject.Application.Services;
 public class BalanceOperationService
 {
     private readonly ICustomerRepository _customerRepository;
-    
+
     public BalanceOperationService(ICustomerRepository customerRepository)
     {
         _customerRepository = customerRepository;

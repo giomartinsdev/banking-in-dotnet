@@ -86,10 +86,11 @@ public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerR
     {
         Customer? fromCustomer = await GetByIdAsync(fromCustomerId);
         Customer? toCustomer = await GetByIdAsync(toCustomerId);
+        int customerBalance = fromCustomer?.GetBalance() ?? 0;
 
         if (fromCustomer == null || toCustomer == null)
             throw new InvalidOperationException("One or both customers not found");
-        if (fromCustomer.Balance < amount)
+        if (customerBalance < amount)
             throw new InvalidOperationException("User does not have enough balance");
 
         bool result = await DoTransferAtomicOperationAsync(fromCustomerId, toCustomerId, amount, description);
@@ -114,5 +115,4 @@ public sealed class CustomerRepository : GenericRepository<Customer>, ICustomerR
             return false;
         }
     }
-
 }
